@@ -7,10 +7,11 @@ import {
   TextInput,
   FlatList,
   Animated,
+  Easing,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import uuid from "react-native-uuid";
-import Icon from "react-native-vector-icons/MaterialIcons"; // Importe o ícone
+import Icon from "react-native-vector-icons/MaterialIcons";
 import {
   GestureHandlerRootView,
   Swipeable,
@@ -35,6 +36,9 @@ export default function App() {
 
       case "CLEAR":
         return [];
+
+      case "LOAD":
+        return action.items;
 
       default:
         return state;
@@ -72,72 +76,53 @@ export default function App() {
   };
 
   const ShoppingItem = ({ item, onCheck, onDelete }) => {
-    const swipeRef = useRef(null);
-    const animatedValue = useRef(new Animated.Value(0)).current;
-  
-    useEffect(() => {
-      Animated.sequence([
-        Animated.timing(animatedValue, {
-          toValue: -20, // Move levemente para a esquerda
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(animatedValue, {
-          toValue: 0, // Retorna à posição original
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }, []);
-  
+    const translateX = useRef(new Animated.Value(0)).current;
+
+    const handleDelete = () => {
+      // Animação para deslizar o item para fora da tela
+      Animated.timing(translateX, {
+        toValue: -500, // Desliza para a esquerda até sumir
+        duration: 300,
+        easing: Easing.ease,
+        useNativeDriver: true,
+      }).start(() => {
+        onDelete(); // Remove o item após a animação
+      });
+    };
+
     return (
-      <Swipeable
-        ref={swipeRef}
-        overshootRight={false}
-        friction={2}
-        rightThreshold={80} // O usuário precisa deslizar mais de 80px para apagar
-        onSwipeableWillOpen={() => {
-          onDelete(); // Somente deleta se deslizar completamente
-        }}
-        renderRightActions={(progress, dragX) => {
-          const scale = dragX.interpolate({
-            inputRange: [0, 80],
-            outputRange: [0, 1], // O botão cresce conforme desliza
-            extrapolate: "clamp",
-          });
-  
-          return (
-            <View style={styles.swipeDelete}>
-              <Animated.View style={{ transform: [{ scale }] }}>
-                <Icon name="delete" size={30} color="white" style={{backgroundColor:'black'}} /> 
-              </Animated.View>
-            </View>
-          );
+      <Animated.View
+        style={{
+          transform: [{ translateX }],
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
-        <Animated.View style={{ transform: [{ translateX: animatedValue }] }}>
-          <TouchableOpacity
-            style={[styles.containerItem, item.check && styles.itemChecked]}
-            onPress={onCheck}
+        <TouchableOpacity
+          style={[styles.containerItem, item.check && styles.itemChecked]}
+          onPress={onCheck}
+        >
+          <Text
+            style={[styles.itemList, item.check && styles.listItemChecked]}
           >
-            <Text
-              style={[styles.itemList, item.check && styles.listItemChecked]}
-            >
-              {item.title}
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </Swipeable>
+            {item.title}
+          </Text>
+        </TouchableOpacity>
+
+       
+        <TouchableOpacity onPress={handleDelete} style={styles.deleteIcon}>
+          <Icon name="delete" size={30} color="red" />
+        </TouchableOpacity>
+      </Animated.View>
     );
   };
-  
-  
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="auto"/>
+      <StatusBar style="auto" />
       <View style={styles.container}>
-      <Text style={{fontSize:25, color:'#b9b9b9', fontWeight:"900", textAlign:'center', marginTop:25, marginBottom:5}}>LISTA DE COMPRAS</Text>
+        <Text style={styles.title}>LISTA DE COMPRAS</Text>
 
         <View style={styles.containerInput}>
           <TextInput
@@ -206,6 +191,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#1e1e1e",
     paddingHorizontal: 10,
   },
+  title: {
+    fontSize: 25,
+    color: "#b9b9b9",
+    fontWeight: "900",
+    textAlign: "center",
+    marginTop: 25,
+    marginBottom: 5,
+  },
   input: {
     backgroundColor: "#333",
     width: "75%",
@@ -237,7 +230,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 8,
     backgroundColor: "#2c2c2c",
-    height: 60, 
+    height: 'auto',
+    minHeight:60,
+    flex: 1, 
   },
   itemList: {
     fontSize: 18,
@@ -250,18 +245,9 @@ const styles = StyleSheet.create({
   itemChecked: {
     backgroundColor: "#3a3a3a",
   },
-  swipeDelete: {
-    backgroundColor: "red",
-    justifyContent: "center",
-    alignItems: "center",
-    width: 80, // Largura fixa para o botão de exclusão
-    height: 60, // Mesma altura que o item da lista
-    borderRadius: 8,
-  },
-  swipeText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
+  deleteIcon: {
+    padding: 15,
+    marginLeft: 10,
   },
   clearButton: {
     backgroundColor: "red",
