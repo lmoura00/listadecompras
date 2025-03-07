@@ -15,6 +15,7 @@ import {
   GestureHandlerRootView,
   Swipeable,
 } from "react-native-gesture-handler";
+import { StatusBar } from "expo-status-bar";
 
 export default function App() {
   const initialState = [];
@@ -134,6 +135,7 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <StatusBar style="auto"/>
       <View style={styles.container}>
       <Text style={{fontSize:25, color:'#b9b9b9', fontWeight:"900", textAlign:'center', marginTop:25, marginBottom:5}}>LISTA DE COMPRAS</Text>
 

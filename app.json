@@ -1,11 +1,12 @@
 {
   "expo": {
-    "name": "listadecompras",
+    "name": "Lista de Compras",
+    "description": "APLICATIVO DE LISTA DE COMPRAS",
     "slug": "listadecompras",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
